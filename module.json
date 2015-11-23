@@ -1,0 +1,248 @@
+{
+  "author" : "Nikolaus Schuster",
+  "category" : "environment",
+  "defaults" : {
+    "description" : "__description__",
+    "title" : "__title__",
+    "check_interval" : 5,
+    "max_on" : 60,
+    "sleep_time" : 30,
+    "preconditions" : {
+      "light_low" : 0,
+      "light_high" : 550,
+      "temp_diff_low" : 5,
+      "temp_diff_high" : 40,
+      "out_temp_high" : 15,
+      "out_temp_low" : -20,
+      "out_humid_high" : 100,
+      "out_humid_low" : 95
+    }
+  },
+  "dependencies" : [
+    "WeatherUnderground"
+  ],
+  "homepage" : "http://lastverteiler.net",
+  "icon" : "icon_heater.png",
+  "maturity" : "stable",
+  "moduleName" : "WindowHeaterControl",
+  "options" : {
+    "fields" : {
+      "heater_active" : {
+        "helper" : "__heater_active_helper__",
+        "label" : "__heater_active_label__",
+        "order" : 1
+      },
+      "heater_device" : {
+        "datasource" : "namespaces",
+        "label" : "__heater_device_label__",
+        "field" : "optionLabels",
+        "optionLabels" : "namespaces:devices_switchBinary:deviceName",
+        "order" : 5,
+        "type" : "select"
+      },
+      "temperature_inside_sensor" : {
+        "datasource" : "namespaces",
+        "field" : "devices",
+        "label" : "__temperature_inside_sensor_label__",
+        "optionLabels" : "namespaces:devices_sensorMultilevel:deviceName",
+        "order" : 6,
+        "type" : "select"
+      },
+      "temperature_outside_sensor" : {
+        "datasource" : "namespaces",
+        "field" : "devices",
+        "label" : "__temperature_outside_sensor_label__",
+        "optionLabels" : "namespaces:devices_sensorMultilevel:deviceName",
+        "order" : 7,
+        "type" : "select"
+      },
+      "humidity_outside_sensor" : {
+        "datasource" : "namespaces",
+        "field" : "devices",
+        "label" : "__humidity_outside_sensor_label__",
+        "optionLabels" : "namespaces:devices_sensorMultilevel:deviceName",
+        "order" : 8,
+        "type" : "select"
+      },
+      "light_inside_sensor" : {
+        "datasource" : "namespaces",
+        "field" : "devices",
+        "label" : "__light_inside_sensor_label__",
+        "optionLabels" : "namespaces:devices_sensorMultilevel:deviceName",
+        "order" : 9,
+        "type" : "select"
+      },
+      "weather_device" : {
+        "datasource" : "namespaces",
+        "field" : "devices",
+        "label" : "__weather_device_label__",
+        "optionLabels" : "namespaces:devices_sensorMultilevel:deviceName",
+        "order" : 10,
+        "type" : "select"
+      },
+      "check_interval": {
+        "helper" : "__check_interval_helper__",
+        "label" : "__check_interval_label__",
+        "order" : 2
+      },
+      "max_on": {
+        "helper" : "__max_on_helper__",
+        "label" : "__max_on_label__",
+        "order" : 3
+      },
+      "sleep_time": {
+        "helper" : "__sleep_time_helper__",
+        "label" : "__sleep_time_label__",
+        "order" : 4
+      },
+      "preconditions": {
+        "order": 11,
+        "fields": {
+          "light_low": {
+            "order": 1,
+            "label": "__light_low_label__",
+            "helper": "__light_low_helper__"
+          },
+          "light_high": {
+            "order": 2,
+            "label": "__light_high_label__",
+            "helper": "__light_high_helper__"
+          },
+          "temp_diff_low": {
+            "order": 3,
+            "label": "__temp_diff_low_label__",
+            "helper": "__temp_diff_low_helper__"
+          },
+          "temp_diff_high": {
+            "order": 4,
+            "label": "__temp_diff_high_label__",
+            "helper": "__temp_diff_high_helper__"
+          },
+          "out_temp_high": {
+            "order": 5,
+            "label": "__out_temp_high_label__"
+          },
+          "out_temp_low": {
+            "order": 6,
+            "label": "__out_temp_low_label__"
+          },
+          "out_humid_high": {
+            "order": 7,
+            "label": "__out_humid_high_label__"
+          },
+          "out_humid_low": {
+            "order": 8,
+            "label": "__out_humid_low_label__"
+          }
+        }
+      }
+    }
+  },
+  "repository" : {
+    "source" : "https://github.com/maros/Zway-BlindControl",
+    "type" : "git"
+  },
+  "schema" : {
+    "properties" : {
+      "heater_active" : {
+        "default" : false,
+        "type" : "boolean"
+      },
+      "check_interval" : {
+        "type" : "number",
+        "required" : true
+      },
+      "max_on" : {
+        "type" : "number",
+        "required" : true
+      },
+      "sleep_time" : {
+        "type" : "number",
+        "required" : true
+      },
+      "heater_device" : {
+        "datasource" : "namespaces",
+        "enum" : "namespaces:devices_switchBinary:deviceId",
+        "field" : "enum",
+        "required" : true
+      },
+      "temperature_inside_sensor" : {
+        "datasource" : "namespaces",
+        "enum" : "namespaces:devices_sensorMultilevel:deviceId",
+        "field" : "enum",
+        "required" : true
+      },
+      "temperature_outside_sensor" : {
+        "datasource" : "namespaces",
+        "enum" : "namespaces:devices_sensorMultilevel:deviceId",
+        "field" : "enum",
+        "required" : true
+      },
+      "humidity_outside_sensor" : {
+        "datasource" : "namespaces",
+        "enum" : "namespaces:devices_sensorMultilevel:deviceId",
+        "field" : "enum",
+        "required" : true
+      },
+      "light_inside_sensor" : {
+        "datasource" : "namespaces",
+        "enum" : "namespaces:devices_sensorMultilevel:deviceId",
+        "field" : "enum",
+        "required" : true
+      },
+      "preconditions": {
+        "properties": {
+          "light_low": {
+            "required": true,
+            "type": "number"
+          },
+          "light_high": {
+            "required": true,
+            "type": "number"
+          },
+          "temp_diff_low": {
+            "required": true,
+            "type": "number",
+            "minimum": -30,
+            "maximum": 40
+          },
+          "temp_diff_high": {
+            "required": true,
+            "type": "number",
+            "minimum": -30,
+            "maximum": 40
+          },
+          "out_temp_high": {
+            "required": true,
+            "type": "number",
+            "minimum": -30,
+            "maximum": 40
+          },
+          "out_temp_low": {
+            "required": true,
+            "type": "number",
+            "minimum": -30,
+            "maximum": 40
+          },
+          "out_humid_high": {
+            "required": true,
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "out_humid_low": {
+            "required": true,
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        "type": "object"
+      }
+    },
+    "required" : true,
+    "type" : "object"
+  },
+  "singleton" : false,
+  "version" : "1.01"
+}
