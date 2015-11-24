@@ -22,7 +22,7 @@ function WindowHeaterControl (id, controller) {
   this.maxOn              = 60*60;
   this.sleepTime          = 60*30;
   this.heaterStatus       = undefined;
-  this.debugMode          = true;
+  this.debugMode          = false;
 }
 
 inherits(WindowHeaterControl, AutomationModule);
@@ -39,12 +39,15 @@ WindowHeaterControl.prototype.init = function init(config) {
   var self = this;
   var langFile = self.controller.loadModuleLang(this.moduleName);
   var icon;
+  var level;
 
   // Create vdev
   if (config['heater_active'] === true) {
     icon = '/ZAutomation/api/v1/load/modulemedia/' + this.moduleName + '/icon_heater_off.png';
+    level = 'off';
   } else {
     icon = '/ZAutomation/api/v1/load/modulemedia/' + this.moduleName + '/icon_heater_disabled.png';
+    level = 'disabled';
   }
   self['HeaterDevice'] = this.controller.devices.create({
     deviceId: this.moduleName + '_' + self.id,
@@ -52,7 +55,7 @@ WindowHeaterControl.prototype.init = function init(config) {
       metrics: {
         probeTitle: 'controller',
         title: langFile['heater_active_label'],
-        level: 'off',
+        level: level,
         icon: icon
       }
     },
@@ -70,15 +73,19 @@ WindowHeaterControl.prototype.init = function init(config) {
     self.log('checking conditions every '+checkInterval+' minutes');
     self.interval = setInterval(_.bind(self.controlHeater,self),1000*60*checkInterval);
     setTimeout(_.bind(self.controlHeater,self),1000*60);
+    _.each(['last_off', 'last_on'], function(metric) {
+      if (undefined !== self['HeaterDevice'].get('metrics:'+metric) && undefined === self[metric]) {
+        self[metric] = self['HeaterDevice'].get('metrics:'+metric);
+      }
+    });
   }
 };
 
 WindowHeaterControl.prototype.log = function log(msg) {
   var self = this;
 
-  if (undefined === msg) {
-    return;
-  }
+  if (undefined === msg) return;
+
   if (null !== log.caller) {
     console.log('['+self.moduleName+'_'+self.id+'] ['+log.caller.name+'] '+msg);
   } else {
@@ -89,12 +96,9 @@ WindowHeaterControl.prototype.log = function log(msg) {
 WindowHeaterControl.prototype.debug = function debug(msg) {
   var self = this;
 
-  if (undefined === msg) {
-    return;
-  }
-  if (self.debugMode !== true) {
-    return;
-  }
+  if (undefined === msg) return;
+  if (self.debugMode !== true) return;
+
   if (null !== debug.caller) {
     console.debug('['+self.moduleName+'_'+self.id+'] ['+debug.caller.name+'] '+msg);
   } else {
@@ -105,9 +109,8 @@ WindowHeaterControl.prototype.debug = function debug(msg) {
 WindowHeaterControl.prototype.error = function error(msg) {
   var self = this;
 
-  if (undefined === msg) {
-    return;
-  }
+  if (undefined === msg) return;
+
   if (null !== error.caller) {
     console.error('['+self.moduleName+'_'+self.id+'] ['+error.caller.name+'] '+msg);
   } else {
@@ -120,6 +123,12 @@ WindowHeaterControl.prototype.stop = function () {
 
   self.last_off = self.getTimestamp();
   self.switchHeater('off');
+
+  _.each(['last_off', 'last_on'], function(metric) {
+    if (undefined !== self[metric]) {
+      self['HeaterDevice'].set('metrics:'+metric, self[metric]);
+    }
+  });
 
   var key = 'HeaterDevice';
   if (typeof(self[key]) !== 'undefined') {
@@ -243,6 +252,8 @@ WindowHeaterControl.prototype.controlHeater = function controlHeater() {
   } else if (self.last_off >= self.last_on && timeOff < self.sleepTime) {
     self.log('Heater was sleeping for '+Math.round(timeOff/60)+' / '+Math.round(self.sleepTime/60)+' minutes, keeping off');
     target = 'off';
+  } else {
+    self.log('Heater is on for '+Math.round(timeOn/60)+' / '+Math.round(self.maxOn/60)+' minutes, proceeding to checks');
   }
 
   if (target == 'off') {
@@ -252,24 +263,22 @@ WindowHeaterControl.prototype.controlHeater = function controlHeater() {
     }
     return;
   }
-  if (self.config.heater_active) {
-    self.checkConditions();
-  }
+  if (self.config.heater_active) self.checkConditions();
 
 };
 
 WindowHeaterControl.prototype.getTimestamp = function getTimestamp() {
-  if (!Date.now) {
-    Date.now = function() { return new Date().getTime(); }
+  if (!Date.now) Date.now = function () {
+    return new Date().getTime();
   }
 
   return Date.now() / 1000 | 0;
 };
 
-WindowHeaterControl.prototype.getConditionGroup = function() {
+WindowHeaterControl.prototype.getCondition = function() {
   var self = this;
   var weatherDevice = self.getWeatherDevice();
-  return weatherDevice.get('metrics:conditiongroup');
+  return weatherDevice.get('metrics:condition');
 };
 
 WindowHeaterControl.prototype.getWeatherDevice = function() {
@@ -284,9 +293,7 @@ WindowHeaterControl.prototype.getWeatherDevice = function() {
     });
   }
 
-  if (typeof(self.weatherDevice) === 'undefined') {
-    self.error('Could not find Weather device');
-  }
+  if (typeof(self.weatherDevice) === 'undefined') self.error('Could not find Weather device');
 
   return self.weatherDevice;
 };
@@ -294,19 +301,17 @@ WindowHeaterControl.prototype.getWeatherDevice = function() {
 WindowHeaterControl.prototype.getSensorData = function getSensorData(type) {
   var self = this;
 
-  if (type == 'condition') {
-    return self.getConditionGroup();
-  }
+  if (type == 'condition') return self.getCondition();
 
   var deviceId = self.config[type+'_sensor'];
   self.debug('querying for '+deviceId);
-  if (typeof(deviceId) === 'undefined') {
-    return;
-  }
+
+  if (typeof(deviceId) === 'undefined') return;
+
   var deviceObject = self.controller.devices.get(deviceId);
-  if (deviceObject === null) {
-    return;
-  }
+
+  if (deviceObject === null) return;
+  
   return deviceObject.get('metrics:level');
 };
 
